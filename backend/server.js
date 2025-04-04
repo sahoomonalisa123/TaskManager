@@ -4,6 +4,8 @@ const cors = require("cors");
 const path = require("path");
 const connectDB = require("./config/db");
 
+const authRoutes = require("./routes/authRoutes")
+
 const app = express();
 
 //Middleware to handel CORS
@@ -23,7 +25,7 @@ app.use(express.json());
 
 
 //Routes
-// app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 // app.use("/api/users", authRoutes);
 // app.use("/api/tasks", authRoutes);
 // app.use("/api/reports", authRoutes);
