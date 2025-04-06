@@ -1,4 +1,4 @@
-const mangoose = require("mangoose");
+const mangoose = require("mongoose");
 const { default: mongoose } = require("mongoose");
 
 const todoSchema = new mongoose.Schema(
