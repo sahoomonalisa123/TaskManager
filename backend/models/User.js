@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema(
         profileImageUrl: { type: String, default: null},
         role: { type: String, enum: ["admin", "member"], default:"member"}, //Role-based access
     },
-    { timestam: true }
+    { timestamps: true }
 );
 
-module.exports = mongoose.model("user", UserSchema);
+module.exports = mongoose.model("User", UserSchema);

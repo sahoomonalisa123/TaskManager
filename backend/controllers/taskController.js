@@ -5,6 +5,68 @@ const Task = require("../models/Task");
 // @access Private
 const getTasks = async (req, res) => {
     try {
+        const { status } = req.query;
+        let filter = {};
+
+        if (status) {
+            filter.status = status;
+        }
+
+        let tasks;
+
+        if (req.user.role === "admin") {
+            tasks = await Task.find(filter).populate(
+                "assignedTo",
+                "name email profileImageUrl"
+            );
+        } else{
+            tasks = await Task.find({...filter, assignedTo: req.user._id }).populate(
+                "assignedTo",
+                "name email profileImageUrl"
+            );
+
+            // Add completed todochecklist count to each task
+            tasks = await Promise.all(
+                tasks.map(async (task) => {
+                    const completedCount = task.todoChecklist.filter(
+                        (item) => item.completed
+                    ).length;
+                    return { ...task._doc, completedCount: completedCount };
+                })
+            );
+
+            // Status summary counts
+            const allTasks = await Task.countDocuments(
+                req.user.role === "admin" ? {}: { assignedTo: req.user._id }
+            );
+
+            const pendingTasks = await Task.countDocuments({
+                ...filter,
+                status: "pending",
+                ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+            });
+            const inProgressTasks = await Task.countDocuments({
+                ...filter,
+                status: "In Progress",
+                ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+            }); 
+            const completedTasks = await Task.countDocuments({
+                ...filter,
+                status: "Completed",
+                ...(req.user.role !== "admin" && { assignedTo: req.user._id }),
+            });
+
+            res.json({
+                tasks,
+                statusSummary: {
+                    all: allTasks,
+                    pendingTasks,
+                    inProgressTasks,
+                    completedTasks,
+                },
+            });
+        }
+
     }
     catch (error) {
         res.status(500).json({ message: "Server error", error: error.message});
