@@ -198,8 +198,15 @@ const updateTaskStatus = async (req, res) => {
             return res.status(403).json({ message: "Not authorized"});
         }
 
-        
+        task.status = req.body.status || task.status;
 
+        if (task.status === "Completed") {
+            task.todoCheckList.forEach((item) => (item.completed = true));
+            task.progress = 100;
+        }
+
+        await task.save();
+        res.json({ message: "Task status updated", task});
     }
     catch (error) {
         res.status(500).json({ message: "Server error", error: error.message});
