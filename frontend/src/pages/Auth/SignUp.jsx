@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import AuthLayout from '../../components/layouts/AuthLayout';
 import ProfilePhotoSelector from '../../components/Inputs/ProfilePhotoSelector';
 import Input from '../../components/inputs/input'; // Make sure the path is correct
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPath';
+import { UserContext } from '../../context/userContext';
+import uploadImage from '../../utils/uploadImage';
 
 const SignUp = () => {
   const [profilePic, setProfilePic] = useState(null);
@@ -12,12 +16,19 @@ const SignUp = () => {
   const [adminInviteToken, setAdminInviteToken] = useState('');
   const [error, setError] = useState(null);
 
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const {updateUser} = useContext(UserContext)
+  const navigate = useNavigate();
 
+  // const validateEmail = (email) => {
+  //   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // };
+
+
+ // Handel SignUp Form Submit
   const handleSignUp = async (e) => {
     e.preventDefault();
+
+    let profileImageUrl =''
 
     if (!fullName) {
       setError('Please enter full name.');
@@ -37,6 +48,41 @@ const SignUp = () => {
     setError('');
 
     // SignUp API Call
+    try{
+
+      // Upload image if present
+      if (profilePic) {
+        const imgUploadRes = await uploadImage(profilePic);
+        profileImageUrl = imageUploadRes.imageUrl || "";
+      }
+        const respone = await axiosInstance.post(API_PATHS.AUTH.REGISTER,{
+          name: fullName,
+          email,
+          password,
+          profileImageUrl,
+          adminInviteToken
+        } );
+
+        const { token, role } = response.data;
+
+        if (token) {
+          localStorage.seItem("token", token);
+          updateUser(respone.data);
+
+          //Redirect based on role
+          if (role ==="admin") {
+            navigate("/admin/dashboard");
+          } else {
+            navigate("/user/dashboard");
+          }
+        }
+    } catch (error) {
+      if (error.respone && error.response.data.message) {
+        setError(error.respone.data.message);
+      }else {
+        setError("Something went wrong. Please try again.");
+      }
+    }
   };
 
   return (

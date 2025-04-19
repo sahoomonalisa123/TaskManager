@@ -31,7 +31,10 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
-// app.use("/api/reports", reportRoutes);
+app.use("/api/reports", reportRoutes);
+
+//Serve uploads folder
+app.use("/uploads",express.static(path.join(__dirname, "uploads")));
 
 
 
